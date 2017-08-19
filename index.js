@@ -35,20 +35,27 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
 }
 
 GridPointStore.prototype.queryStream = function (bbox) {
-  var topLeft = this.pointToTileString([bbox[0][0], bbox[0][1]])
-  var topRight = this.pointToTileString([bbox[0][0], bbox[1][1]])
-  console.log('from', topLeft, 'to', topRight)
-  var rs = this.db.createReadStream({
-    gt: topLeft,
-    // lt: topRight
-  })
-  rs.on('data', console.log)
-  // ...
+  var y = bbox[0][0]
+  var endY = bbox[1][0]
+  console.log('endY', endY)
+
+  while (y < endY + this.tileSize) {
+    var left = this.pointToTileString([y, bbox[0][1]])
+    var right = this.pointToTileString([y, bbox[1][1]])
+    console.log('from', left, 'to', right)
+    var rs = this.db.createReadStream({
+      gt: left,
+      lt: right
+    })
+    rs.on('data', console.log)
+    y += this.tileSize
+  }
 }
 
 GridPointStore.prototype.pointToTileString = function (pt) {
   pt[0] = Math.max(-90, Math.min(90, pt[0]))
   pt[1] = Math.max(-180, Math.min(180, pt[1]))
+  // console.log('pt', pt)
   return this.coordToTileString(pt[0] + 90) + ',' + this.coordToTileString(pt[1] + 180)
 }
 

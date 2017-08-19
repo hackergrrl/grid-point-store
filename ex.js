@@ -3,7 +3,7 @@ var memdb = require('memdb')
 
 var store = GeoStore(memdb(), { tileSize: 50 })
 
-var pending = 20
+var pending = 10
 console.time('insert')
 function insert () {
   if (!pending) return check()
