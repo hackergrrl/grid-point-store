@@ -2,12 +2,14 @@ module.exports = GridPointStore
 
 var ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
+// TODO: store point data as a buffer that is appended to
 function GridPointStore (leveldb, opts) {
   if (!(this instanceof GridPointStore)) return new GridPointStore(leveldb, opts)
   opts = opts || {}
 
   this.db = leveldb
-  this.tileSize = opts.tileSize || 0.005
+  this.zoomLevel = opts.zoomLevel || 16
+  this.mapSize = Math.pow(2, this.zoomLevel) - 1
 }
 
 GridPointStore.prototype.insert = function (pt, value, cb) {
@@ -53,14 +55,10 @@ GridPointStore.prototype.queryStream = function (bbox) {
 }
 
 GridPointStore.prototype.pointToTileString = function (pt) {
-  pt[0] = Math.max(-90, Math.min(90, pt[0]))
-  pt[1] = Math.max(-180, Math.min(180, pt[1]))
-  // console.log('pt', pt)
-  return this.coordToTileString(pt[0] + 90) + ',' + this.coordToTileString(pt[1] + 180)
-}
-
-GridPointStore.prototype.coordToTileString =  function (c) {
-  return tileToTileString(Math.floor(c / this.tileSize))
+  var lat = latToMercator(pt[0], this.mapSize)
+  var lon = lonToMercator(pt[1], this.mapSize)
+  console.log(lat, lon)
+  return tileToTileString(lat) + ',' + tileToTileString(lon)
 }
 
 // non-negative numbers only, if you want proper lex sort order
@@ -83,3 +81,12 @@ function tileToTileString (n) {
   return str
 }
 
+function latToMercator (lat, mapSize) {
+  var y = Math.floor(((lat + 180) / 360) * mapSize)
+  return y
+}
+
+function lonToMercator (lon, mapSize) {
+  var x = Math.floor(((lon + 85.0511) / 170.1022) * mapSize)
+  return x
+}
