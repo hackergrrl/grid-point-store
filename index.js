@@ -39,10 +39,12 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
 GridPointStore.prototype.queryStream = function (bbox) {
   var y = bbox[0][0]
   var endY = bbox[1][0]
-  var tileSize = 180 / this.mapSize
-  console.log('endY', endY)
+  var tileSize = 170.1022 / this.mapSize
+  // console.log('endY', endY)
+  // console.log('tileSize', tileSize)
 
   while (y < endY + tileSize) {
+    // console.log('y', y)
     var left = this.pointToTileString([y, bbox[0][1]])
     var right = this.pointToTileString([y, bbox[1][1]])
     console.log('from', left, 'to', right)
