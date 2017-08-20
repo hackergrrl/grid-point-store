@@ -39,9 +39,10 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
 GridPointStore.prototype.queryStream = function (bbox) {
   var y = bbox[0][0]
   var endY = bbox[1][0]
+  var tileSize = 180 / this.mapSize
   console.log('endY', endY)
 
-  while (y < endY + this.tileSize) {
+  while (y < endY + tileSize) {
     var left = this.pointToTileString([y, bbox[0][1]])
     var right = this.pointToTileString([y, bbox[1][1]])
     console.log('from', left, 'to', right)
@@ -50,14 +51,14 @@ GridPointStore.prototype.queryStream = function (bbox) {
       lt: right
     })
     rs.on('data', console.log)
-    y += this.tileSize
+    y += tileSize
   }
 }
 
 GridPointStore.prototype.pointToTileString = function (pt) {
   var lat = latToMercator(pt[0], this.mapSize)
   var lon = lonToMercator(pt[1], this.mapSize)
-  console.log(lat, lon)
+  // console.log(lat, lon)
   return tileToTileString(lat) + ',' + tileToTileString(lon)
 }
 
@@ -81,12 +82,12 @@ function tileToTileString (n) {
   return str
 }
 
-function latToMercator (lat, mapSize) {
-  var y = Math.floor(((lat + 180) / 360) * mapSize)
+function lonToMercator (lon, mapSize) {
+  var y = Math.floor(((lon + 180) / 360) * mapSize)
   return y
 }
 
-function lonToMercator (lon, mapSize) {
-  var x = Math.floor(((lon + 85.0511) / 170.1022) * mapSize)
+function latToMercator (lat, mapSize) {
+  var x = Math.floor(((lat + 85.0511) / 170.1022) * mapSize)
   return x
 }

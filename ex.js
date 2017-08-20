@@ -20,6 +20,7 @@ insert()
 
 function check () {
   console.timeEnd('insert')
-  store.queryStream([[0,0],[90,180]])
+  // store.queryStream([[0,0],[90,180]])
+  store.queryStream([[-0.01,-0.01],[0.01,0.01]])
   console.log('done')
 }
