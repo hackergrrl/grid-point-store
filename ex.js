@@ -22,7 +22,10 @@ function check () {
   console.timeEnd('insert')
   console.time('query')
   // store.queryStream([[0,0],[90,180]])
-  store.queryStream([[-0.01,-0.01],[0.01,0.01]])
+  var q = store.queryStream([[-0.01,-0.01],[0.01,0.01]])
+  q.on('data', function (pt) {
+    console.log('data', pt)
+  })
   console.timeEnd('query')
   console.log('done')
 }

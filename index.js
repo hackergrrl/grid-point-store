@@ -1,3 +1,5 @@
+var Readable = require('stream').Readable
+
 module.exports = GridPointStore
 
 var ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -37,6 +39,9 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
 }
 
 GridPointStore.prototype.queryStream = function (bbox) {
+  var stream = new Readable({ objectMode: true })
+  stream._read = function () {}
+
   var y = bbox[0][0]
   var endY = bbox[1][0]
   var tileSize = 170.1022 / this.mapSize
@@ -52,9 +57,13 @@ GridPointStore.prototype.queryStream = function (bbox) {
       gt: left,
       lt: right
     })
-    rs.on('data', console.log)
+    rs.on('data', function (pt) {
+      stream.push(pt)
+    })
     y += tileSize
   }
+
+  return stream
 }
 
 GridPointStore.prototype.pointToTileString = function (pt) {
