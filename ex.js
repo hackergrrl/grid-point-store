@@ -26,6 +26,8 @@ function check () {
   q.on('data', function (pt) {
     console.log('data', pt)
   })
-  console.timeEnd('query')
+  q.on('end', function () {
+    console.timeEnd('query')
+  })
   console.log('done')
 }

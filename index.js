@@ -48,17 +48,22 @@ GridPointStore.prototype.queryStream = function (bbox) {
   // console.log('endY', endY)
   // console.log('tileSize', tileSize)
 
+  var pending = 0
   while (y < endY + tileSize) {
     // console.log('y', y)
     var left = this.pointToTileString([y, bbox[0][1]])
     var right = this.pointToTileString([y, bbox[1][1]])
     console.log('from', left, 'to', right)
+    pending++
     var rs = this.db.createReadStream({
       gt: left,
       lt: right
     })
     rs.on('data', function (pt) {
       stream.push(pt)
+    })
+    rs.on('end', function () {
+      if (!--pending) stream.push(null)
     })
     y += tileSize
   }
