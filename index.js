@@ -42,6 +42,9 @@ GridPointStore.prototype.queryStream = function (bbox) {
   var stream = new Readable({ objectMode: true })
   stream._read = function () {}
 
+  bbox[0][0] += 0.00000001
+  bbox[1][1] -= 0.00000001
+
   var y = latToMercator(bbox[1][0], this.mapSize)
   var endY = latToMercator(bbox[0][0], this.mapSize)
   // console.log('endY', endY)
@@ -52,26 +55,44 @@ GridPointStore.prototype.queryStream = function (bbox) {
     // console.log('y', y)
     var left = lonToMercator(bbox[0][1], this.mapSize)
     var right = lonToMercator(bbox[1][1], this.mapSize)
+    console.log('left', left, 'right', right)
     var leftKey = tileToTileString(y) + ',' + tileToTileString(left)
     var rightKey = tileToTileString(y) + ',' + tileToTileString(right)
-    // console.log('from', leftKey, 'to', rightKey)
+    console.log('from', leftKey, 'to', rightKey)
     pending++
-    var rs = this.db.createReadStream({
-      gte: leftKey,
-      lte: rightKey
-    })
-    rs.on('data', function (data) {
-      var pts = JSON.parse(data.value)
-      pts.forEach(function (pt) {
-        if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
-            pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
-          stream.push(pt)
-        }
+
+    if (leftKey !== rightKey) {
+      var rs = this.db.createReadStream({
+        gte: leftKey,
+        lte: rightKey
       })
-    })
-    rs.on('end', function () {
-      if (!--pending) stream.push(null)
-    })
+      rs.on('data', function (data) {
+        var pts = JSON.parse(data.value)
+        pts.forEach(function (pt) {
+          if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
+              pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
+            stream.push(pt)
+          }
+        })
+      })
+      rs.on('end', function () {
+        if (!--pending) stream.push(null)
+      })
+    } else {
+      this.db.get(leftKey, function (err, value) {
+        if (err && err.notFound) return
+        if (err) return stream.emit('error', err)
+        var pts = JSON.parse(value)
+        return pts.forEach(function (pt) {
+          if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
+              pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
+            stream.push(pt)
+            if (!--pending) stream.push(null)
+          }
+        })
+      })
+    }
+
     y++
   }
 
@@ -106,16 +127,20 @@ function tileToTileString (n) {
   return str
 }
 
-function lonToMercator (lon, mapSize) {
-  // console.log('raw lon', ((lon + 180) / 360) * mapSize)
-  var y = Math.floor(((lon + 180) / 360) * mapSize)
-  return y
+function lonToRawMercator (lon, mapSize) {
+  return ((lon + 180) / 360) * mapSize
 }
 
 // Lifted from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+function latToRawMercator (lat, mapSize) {
+  return (1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 * mapSize
+}
+
+function lonToMercator (lon, mapSize) {
+  return Math.floor(lonToRawMercator(lon, mapSize))
+}
+
 function latToMercator (lat, mapSize) {
-  var res = (1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 * mapSize
-  // console.log('raw lat', res)
-  return Math.floor(res)
+  return Math.floor(latToRawMercator(lat, mapSize))
 }
 
