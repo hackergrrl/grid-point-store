@@ -11,7 +11,7 @@ function GridPointStore (leveldb, opts) {
 
   this.db = leveldb
   this.zoomLevel = opts.zoomLevel || 16
-  this.mapSize = Math.pow(2, this.zoomLevel) - 1
+  this.mapSize = Math.pow(2, this.zoomLevel)
 }
 
 GridPointStore.prototype.insert = function (pt, value, cb) {
