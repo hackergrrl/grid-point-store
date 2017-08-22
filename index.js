@@ -42,23 +42,23 @@ GridPointStore.prototype.queryStream = function (bbox) {
   var stream = new Readable({ objectMode: true })
   stream._read = function () {}
 
-  var y = bbox[0][0]
-  var endY = bbox[1][0]
-
-  // TODO: compute the proper tile size based on zoom level
-  var tileSize = Math.ceil(latToMercator(0.02197265625, this.mapSize))
-  console.log('tileSize', tileSize)
+  var y = latToMercator(bbox[1][0], this.mapSize)
+  var endY = latToMercator(bbox[0][0], this.mapSize)
+  console.log('endY', endY)
 
   var pending = 0
-  while (y < endY) {
+  // TODO: should bbox queries inclusive on the bottom+right edges?
+  while (y <= endY) {
     // console.log('y', y)
-    var left = this.pointToTileString([y, bbox[0][1]])
-    var right = this.pointToTileString([y, bbox[1][1]])
-    console.log('from', left, 'to', right)
+    var left = lonToMercator(bbox[0][1], this.mapSize)
+    var right = lonToMercator(bbox[1][1], this.mapSize)
+    var leftKey = tileToTileString(y) + ',' + tileToTileString(left)
+    var rightKey = tileToTileString(y) + ',' + tileToTileString(right)
+    console.log('from', leftKey, 'to', rightKey)
     pending++
     var rs = this.db.createReadStream({
-      gt: left,
-      lt: right
+      gt: leftKey,
+      lt: rightKey
     })
     rs.on('data', function (pt) {
       stream.push(pt)
@@ -66,7 +66,7 @@ GridPointStore.prototype.queryStream = function (bbox) {
     rs.on('end', function () {
       if (!--pending) stream.push(null)
     })
-    y += tileSize
+    y++
   }
 
   return stream
@@ -75,7 +75,8 @@ GridPointStore.prototype.queryStream = function (bbox) {
 GridPointStore.prototype.pointToTileString = function (pt) {
   var lat = latToMercator(pt[0], this.mapSize)
   var lon = lonToMercator(pt[1], this.mapSize)
-  // console.log(lat, lon)
+  // console.log('pt[0], pt[1]', pt[0], pt[1])
+  // console.log('lat, lon', lat, lon)
   return tileToTileString(lat) + ',' + tileToTileString(lon)
 }
 
@@ -100,7 +101,7 @@ function tileToTileString (n) {
 }
 
 function lonToMercator (lon, mapSize) {
-  console.log('raw lon', ((lon + 180) / 360) * mapSize)
+  // console.log('raw lon', ((lon + 180) / 360) * mapSize)
   var y = Math.floor(((lon + 180) / 360) * mapSize)
   return y
 }
@@ -108,7 +109,7 @@ function lonToMercator (lon, mapSize) {
 // Lifted from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 function latToMercator (lat, mapSize) {
   var res = (1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 * mapSize
-  console.log('raw lat', res)
+  // console.log('raw lat', res)
   return Math.floor(res)
 }
 

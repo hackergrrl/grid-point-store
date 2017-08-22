@@ -1,7 +1,7 @@
 var GeoStore = require('.')
 var memdb = require('memdb')
 
-var store = GeoStore(memdb(), { tileSize: 50 })
+var store = GeoStore(memdb(), { zoomLevel: 14 })
 
 var pending = 10
 var spread = 0.03
@@ -21,8 +21,8 @@ insert()
 function check () {
   console.timeEnd('insert')
   console.time('query')
-  // store.queryStream([[0,0],[90,180]])
-  var q = store.queryStream([[-0.01,-0.01],[0.01,0.01]])
+  var q =store.queryStream([[0,0],[90,180]])
+  // var q = store.queryStream([[-0.01,-0.01],[0.01,0.01]])
   q.on('data', function (pt) {
     console.log('data', pt)
   })
