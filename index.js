@@ -55,7 +55,7 @@ GridPointStore.prototype.queryStream = function (bbox) {
     // console.log('y', y)
     var left = lonToMercator(bbox[0][1], this.mapSize)
     var right = lonToMercator(bbox[1][1], this.mapSize)
-    console.log('left', left, 'right', right)
+    // console.log('left', left, 'right', right)
     var leftKey = tileToTileString(y) + ',' + tileToTileString(left)
     var rightKey = tileToTileString(y) + ',' + tileToTileString(right)
     console.log('from', leftKey, 'to', rightKey)
@@ -83,13 +83,13 @@ GridPointStore.prototype.queryStream = function (bbox) {
         if (err && err.notFound) return
         if (err) return stream.emit('error', err)
         var pts = JSON.parse(value)
-        return pts.forEach(function (pt) {
+        pts.forEach(function (pt) {
           if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
               pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
             stream.push(pt)
-            if (!--pending) stream.push(null)
           }
         })
+        if (!--pending) stream.push(null)
       })
     }
 
