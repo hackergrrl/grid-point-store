@@ -44,7 +44,7 @@ GridPointStore.prototype.queryStream = function (bbox) {
 
   var y = latToMercator(bbox[1][0], this.mapSize)
   var endY = latToMercator(bbox[0][0], this.mapSize)
-  console.log('endY', endY)
+  // console.log('endY', endY)
 
   var pending = 0
   // TODO: should bbox queries inclusive on the bottom+right edges?
@@ -54,14 +54,20 @@ GridPointStore.prototype.queryStream = function (bbox) {
     var right = lonToMercator(bbox[1][1], this.mapSize)
     var leftKey = tileToTileString(y) + ',' + tileToTileString(left)
     var rightKey = tileToTileString(y) + ',' + tileToTileString(right)
-    console.log('from', leftKey, 'to', rightKey)
+    // console.log('from', leftKey, 'to', rightKey)
     pending++
     var rs = this.db.createReadStream({
-      gt: leftKey,
-      lt: rightKey
+      gte: leftKey,
+      lte: rightKey
     })
-    rs.on('data', function (pt) {
-      stream.push(pt)
+    rs.on('data', function (data) {
+      var pts = JSON.parse(data.value)
+      pts.forEach(function (pt) {
+        if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
+            pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
+          stream.push(pt)
+        }
+      })
     })
     rs.on('end', function () {
       if (!--pending) stream.push(null)
