@@ -44,7 +44,7 @@ GridPointStore.prototype.queryStream = function (bbox) {
 
   var y = bbox[0][0]
   var endY = bbox[1][0]
-  var tileSize = 170.1022 / this.mapSize
+  var tileSize = latToMercator(0.02197265625, this.mapSize)
   // console.log('endY', endY)
   // console.log('tileSize', tileSize)
 
