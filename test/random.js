@@ -8,7 +8,7 @@ test('random points', function (t) {
   var bbox = [ [ -5, -5 ], [ 5, 5 ] ]
   var expected = {}
 
-  var pending = 10000
+  var pending = 2000
   var spread = 20
   function insert () {
     if (!pending) return check()
