@@ -44,9 +44,10 @@ GridPointStore.prototype.queryStream = function (bbox) {
 
   var y = bbox[0][0]
   var endY = bbox[1][0]
-  var tileSize = latToMercator(0.02197265625, this.mapSize)
-  // console.log('endY', endY)
-  // console.log('tileSize', tileSize)
+
+  // TODO: compute the proper tile size based on zoom level
+  var tileSize = Math.ceil(latToMercator(0.02197265625, this.mapSize))
+  console.log('tileSize', tileSize)
 
   var pending = 0
   while (y < endY) {
