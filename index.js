@@ -20,7 +20,7 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
   var at = this.pointToTileString(pt).split(',')
   var idx = at[0] + ',' + at[1]
 
-  console.log(pt, idx)
+  // console.log(pt, idx)
 
   this.db.get(idx, function (err, json) {
     if (err && !err.notFound) return cb(err)
@@ -49,7 +49,7 @@ GridPointStore.prototype.queryStream = function (bbox) {
   // console.log('tileSize', tileSize)
 
   var pending = 0
-  while (y < endY + tileSize) {
+  while (y < endY) {
     // console.log('y', y)
     var left = this.pointToTileString([y, bbox[0][1]])
     var right = this.pointToTileString([y, bbox[1][1]])
