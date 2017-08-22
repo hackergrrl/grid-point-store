@@ -100,7 +100,7 @@ function tileToTileString (n) {
   while (n > 0) {
     var r = n % ALPHABET.length
     n = Math.floor(n / ALPHABET.length)
-    str += ALPHABET[r]
+    str = ALPHABET[r] + str
   }
   // console.log('out', str)
   return str
