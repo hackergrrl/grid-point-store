@@ -99,11 +99,15 @@ function tileToTileString (n) {
 }
 
 function lonToMercator (lon, mapSize) {
+  console.log('raw lon', ((lon + 180) / 360) * mapSize)
   var y = Math.floor(((lon + 180) / 360) * mapSize)
   return y
 }
 
+// Lifted from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 function latToMercator (lat, mapSize) {
-  var x = Math.floor(((lat + 85.0511) / 170.1022) * mapSize)
-  return x
+  var res = (1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 * mapSize
+  console.log('raw lat', res)
+  return Math.floor(res)
 }
+
