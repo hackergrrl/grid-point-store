@@ -3,7 +3,7 @@ var test = require('tape')
 var memdb = require('memdb')
 
 test('random points', function (t) {
-  var store = GeoStore(memdb(), { zoomLevel: 8 })
+  var store = GeoStore(memdb({valueEncoding:'binary'}), { zoomLevel: 8 })
 
   var bbox = [ [ -5, -5 ], [ 5, 5 ] ]
   var expected = {}
@@ -14,7 +14,7 @@ test('random points', function (t) {
     if (!pending) return check()
     var x = Math.random() * spread - spread/2
     var y = Math.random() * spread - spread/2
-    var loc = Math.random().toString().substring(2)
+    var loc = parseInt(Math.random().toString().substring(15))
     store.insert([x,y], loc, function (err) {
       pending--
 

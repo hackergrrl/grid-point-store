@@ -39,7 +39,7 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
     var s = Date.now()
 
     if (buf) {
-      buf = Buffer.concat([Buffer(buf), itemBuf])
+      buf = Buffer.concat([buf, itemBuf])
     }
     else buf = itemBuf
 
@@ -75,7 +75,7 @@ GridPointStore.prototype.queryStream = function (bbox) {
     pending++
 
     if (leftKey !== rightKey) {
-      var rs = this.db.createReadStream({
+      var rs = this.db.createValueStream({
         gte: leftKey,
         lte: rightKey
       })

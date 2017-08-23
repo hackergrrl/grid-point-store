@@ -1,7 +1,9 @@
 var GeoStore = require('.')
 var memdb = require('memdb')
+var level = require('level')
 
-var store = GeoStore(memdb({valueEncoding:'buffer'}), { zoomLevel: 14 })
+var store = GeoStore(memdb({valueEncoding:'binary'}), { zoomLevel: 14 })
+// var store = GeoStore(level('kdb', {valueEncoding:'binary'}), { zoomLevel: 14 })
 
 var pending = 50000
 var spread = 1  // ~100km
@@ -20,7 +22,9 @@ insert()
 
 function check () {
   console.timeEnd('insert')
-    console.log('JSON time', store.jtime)
+
+  console.log('JSON time', store.jtime)
+
   console.time('query')
   var bbox = [
     [ -1.252341676699629, -77.29980468749999 ],
