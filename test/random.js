@@ -14,7 +14,7 @@ test('random points', function (t) {
     if (!pending) return check()
     var x = Math.random() * spread - spread/2
     var y = Math.random() * spread - spread/2
-    var loc = parseInt(Math.random().toString().substring(15))
+    var loc = Math.floor(Math.random() * 1000000)
     store.insert([x,y], loc, function (err) {
       pending--
 
