@@ -15,8 +15,6 @@ function GridPointStore (leveldb, opts) {
   this.mapSize = Math.pow(2, this.zoomLevel)
   this.pointType = Types(opts.pointType || 'float64')
   this.valueType = Types(opts.valueType || 'uint32')
-
-  this.jtime = 0
 }
 
 GridPointStore.prototype.insert = function (pt, value, cb) {
@@ -24,8 +22,6 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
 
   var at = this.pointToTileString(pt).split(',')
   var idx = at[0] + ',' + at[1]
-
-  // console.log(pt, idx)
 
   this.db.get(idx, {valueEncoding: 'binary'}, function (err, buf) {
     if (err && !err.notFound) return cb(err)
@@ -36,14 +32,10 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
     self.pointType.write(itemBuf, pt[1], pos); pos += self.pointType.size
     self.valueType.write(itemBuf, value, pos)
 
-    var s = Date.now()
-
     if (buf) {
       buf = Buffer.concat([buf, itemBuf])
     }
     else buf = itemBuf
-
-    self.jtime += Date.now() - s
 
     self.db.put(idx, buf, {valueEncoding: 'binary'}, cb)
   })
@@ -60,18 +52,14 @@ GridPointStore.prototype.queryStream = function (bbox) {
 
   var y = latToMercator(bbox[1][0], this.mapSize)
   var endY = latToMercator(bbox[0][0], this.mapSize)
-  // console.log('endY', endY)
 
   var pending = 0
   // TODO: should bbox queries inclusive on the bottom+right edges?
   while (y <= endY) {
-    // console.log('y', y)
     var left = lonToMercator(bbox[0][1], this.mapSize)
     var right = lonToMercator(bbox[1][1], this.mapSize)
-    // console.log('left', left, 'right', right)
     var leftKey = tileToTileString(y) + ',' + tileToTileString(left)
     var rightKey = tileToTileString(y) + ',' + tileToTileString(right)
-    console.log('from', leftKey, 'to', rightKey)
     pending++
 
     if (leftKey !== rightKey) {
@@ -133,14 +121,11 @@ GridPointStore.prototype.deserializePoints = function (buf) {
 GridPointStore.prototype.pointToTileString = function (pt) {
   var lat = latToMercator(pt[0], this.mapSize)
   var lon = lonToMercator(pt[1], this.mapSize)
-  // console.log('pt[0], pt[1]', pt[0], pt[1])
-  // console.log('lat, lon', lat, lon)
   return tileToTileString(lat) + ',' + tileToTileString(lon)
 }
 
 // non-negative numbers only, if you want proper lex sort order
 function tileToTileString (n) {
-  // console.log('in', n)
   var str = ''
   if (n < 0) {
     str += '-'
@@ -154,7 +139,6 @@ function tileToTileString (n) {
     n = Math.floor(n / ALPHABET.length)
     str = ALPHABET[r] + str
   }
-  // console.log('out', str)
   return str
 }
 
