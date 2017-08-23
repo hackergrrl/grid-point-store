@@ -56,9 +56,47 @@ var GeoStore = require('grid-point-store')
 
 ### var store = GeoStore(leveldb[, opts])
 
+Create a new point store `store` backed by the LevelUP instance `leveldb`.
+
+Valid `opts` include:
+
+- `zoomLevel` (integer): an OSM-style zoom level to divide the world up by.
+  `zoomLevel == 1` captures the entire world in 1 tile, `2` in 4 tiles, `3` in
+  16 tiles, and so forth. Read more on [OSM zoom
+  levels](wiki.openstreetmap.org/wiki/Zoom_levels).
+- `pointType` (string): a [comparable storable
+  type](https://github.com/substack/comparable-storable-types) string for the
+  latitude and longitude components. Defaults to `float64`.
+- `valueType` (string): a [comparable storable
+  type](https://github.com/substack/comparable-storable-types) string for
+  point values. Defaults to `uint32`.
+
 ### store.insert([lat, lon], value, cb)
 
-### store.queryStream(bbox)
+Insert a point `[latitude, longitude]` with value `value` into the store.
+
+`cb` is a callback that will be called as `cb(err)` if an error occurs, or
+`cb(null)` if the insertion succeeded.
+
+### var stream = store.queryStream(bbox)
+
+Query a rectangular region for points. Returns the Readable stream `stream`.
+
+`bbox` is an array of arrays of the form
+
+```
+[
+  [ topLeftLatitude,     topLeftLongitude ],
+  [ bottomRightLatitude, bottomRightLongitude ]
+]
+```
+
+## Caveats
+
+- Missing: stream backpressure on `queryStream`
+- Missing: `store.remove()` for removing points
+
+PRs very welcome! :heart:
 
 ## Install
 
