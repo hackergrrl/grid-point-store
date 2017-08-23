@@ -27,7 +27,7 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
 
   // console.log(pt, idx)
 
-  this.db.get(idx, function (err, buf) {
+  this.db.get(idx, {valueEncoding: 'binary'}, function (err, buf) {
     if (err && !err.notFound) return cb(err)
 
     var itemBuf = new Buffer(self.pointType.size * 2 + self.valueType.size)
@@ -45,7 +45,7 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
 
     self.jtime += Date.now() - s
 
-    self.db.put(idx, buf, cb)
+    self.db.put(idx, buf, {valueEncoding: 'binary'}, cb)
   })
 }
 
@@ -77,7 +77,8 @@ GridPointStore.prototype.queryStream = function (bbox) {
     if (leftKey !== rightKey) {
       var rs = this.db.createValueStream({
         gte: leftKey,
-        lte: rightKey
+        lte: rightKey,
+        valueEncoding: 'binary'
       })
       rs.on('data', function (data) {
         // TODO: test this code path
@@ -87,7 +88,7 @@ GridPointStore.prototype.queryStream = function (bbox) {
         if (!--pending) stream.push(null)
       })
     } else {
-      this.db.get(leftKey, function (err, value) {
+      this.db.get(leftKey, {valueEncoding:'binary'}, function (err, value) {
         if (err && err.notFound) return
         if (err) return stream.emit('error', err)
         onData(Buffer(value))

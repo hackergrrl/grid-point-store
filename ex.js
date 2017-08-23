@@ -2,7 +2,7 @@ var GeoStore = require('.')
 var memdb = require('memdb')
 var level = require('level')
 
-var store = GeoStore(memdb({valueEncoding:'binary'}), { zoomLevel: 14 })
+var store = GeoStore(memdb(), { zoomLevel: 14 })
 // var store = GeoStore(level('kdb', {valueEncoding:'binary'}), { zoomLevel: 14 })
 
 var pending = 50000
