@@ -3,7 +3,7 @@ var test = require('tape')
 var memdb = require('memdb')
 
 test('zoom 14 aligned bbox', function (t) {
-  var store = GeoStore(memdb({valueEncoding:'binary'}), { zoomLevel: 14 })
+  var store = GeoStore(memdb({valueEncoding: 'binary'}), { zoomLevel: 14 })
 
   var bbox = [
     [ -1.252341676699629, -77.29980468749999 ],
@@ -14,7 +14,7 @@ test('zoom 14 aligned bbox', function (t) {
     t.error(err)
     store.insert([-1.252341676699630, -77.28], 2, function (err) {
       t.error(err)
-      store.insert([-1.252341676699629, -77.27783203124 ], 3, function (err) {
+      store.insert([-1.252341676699629, -77.27783203124], 3, function (err) {
         t.error(err)
         check()
       })
@@ -36,4 +36,3 @@ test('zoom 14 aligned bbox', function (t) {
     })
   }
 })
-

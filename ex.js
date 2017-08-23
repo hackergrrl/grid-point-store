@@ -10,10 +10,10 @@ var spread = 1  // ~100km
 console.time('insert')
 function insert () {
   if (!pending) return check()
-  var x = -77.28 + Math.random() * spread - spread/2
-  var y = -1.24 + Math.random() * spread - spread/2
+  var x = -77.28 + Math.random() * spread - spread / 2
+  var y = -1.24 + Math.random() * spread - spread / 2
   var loc = parseInt(Math.random().toString().substring(15))
-  store.insert([y,x], loc, function (err) {
+  store.insert([y, x], loc, function (err) {
     pending--
     insert()
   })

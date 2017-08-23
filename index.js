@@ -66,15 +66,12 @@ GridPointStore.prototype.queryStream = function (bbox) {
         lte: rightKey,
         valueEncoding: 'binary'
       })
-      rs.on('data', function (data) {
-        // TODO: test this code path
-        onData(data)
-      })
+      rs.on('data', onData)
       rs.on('end', function () {
         if (!--pending) stream.push(null)
       })
     } else {
-      this.db.get(leftKey, {valueEncoding:'binary'}, function (err, value) {
+      this.db.get(leftKey, {valueEncoding: 'binary'}, function (err, value) {
         if (err && err.notFound) return
         if (err) return stream.emit('error', err)
         onData(Buffer(value))
@@ -87,7 +84,7 @@ GridPointStore.prototype.queryStream = function (bbox) {
 
   function onData (buf) {
     var pts = self.deserializePoints(buf)
-    for (var i=0; i < pts.length; i++) {
+    for (var i = 0; i < pts.length; i++) {
       var pt = pts[i]
       if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
           pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
@@ -146,7 +143,7 @@ function lonToRawMercator (lon, mapSize) {
 
 // Lifted from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 function latToRawMercator (lat, mapSize) {
-  return (1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 * mapSize
+  return (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * mapSize
 }
 
 function lonToMercator (lon, mapSize) {
@@ -156,4 +153,3 @@ function lonToMercator (lon, mapSize) {
 function latToMercator (lat, mapSize) {
   return Math.floor(latToRawMercator(lat, mapSize))
 }
-
