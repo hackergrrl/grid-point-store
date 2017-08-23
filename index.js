@@ -1,4 +1,5 @@
 var Readable = require('stream').Readable
+var Types = require('comparable-storable-types')
 
 module.exports = GridPointStore
 
@@ -12,6 +13,10 @@ function GridPointStore (leveldb, opts) {
   this.db = leveldb
   this.zoomLevel = opts.zoomLevel || 16
   this.mapSize = Math.pow(2, this.zoomLevel)
+  this.pointType = Types(opts.pointType || 'float64')
+  this.valueType = Types(opts.valueType || 'uint32')
+
+  this.jtime = 0
 }
 
 GridPointStore.prototype.insert = function (pt, value, cb) {
@@ -22,19 +27,25 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
 
   // console.log(pt, idx)
 
-  this.db.get(idx, function (err, json) {
+  this.db.get(idx, function (err, buf) {
     if (err && !err.notFound) return cb(err)
-    var data = []
-    if (json) {
-      data = JSON.parse(json)
+
+    var itemBuf = new Buffer(self.pointType.size * 2 + self.valueType.size)
+    var pos = 0
+    self.pointType.write(itemBuf, pt[0], pos); pos += self.pointType.size
+    self.pointType.write(itemBuf, pt[1], pos); pos += self.pointType.size
+    self.valueType.write(itemBuf, value, pos)
+
+    var s = Date.now()
+
+    if (buf) {
+      buf = Buffer.concat([Buffer(buf), itemBuf])
     }
-    var item = {
-      lat: pt[0],
-      lon: pt[1],
-      value: value
-    }
-    data.push(item)
-    self.db.put(idx, JSON.stringify(data), cb)
+    else buf = itemBuf
+
+    self.jtime += Date.now() - s
+
+    self.db.put(idx, buf, cb)
   })
 }
 
@@ -44,6 +55,8 @@ GridPointStore.prototype.queryStream = function (bbox) {
 
   bbox[0][0] += 0.00000001
   bbox[1][1] -= 0.00000001
+
+  var self = this
 
   var y = latToMercator(bbox[1][0], this.mapSize)
   var endY = latToMercator(bbox[0][0], this.mapSize)
@@ -67,13 +80,8 @@ GridPointStore.prototype.queryStream = function (bbox) {
         lte: rightKey
       })
       rs.on('data', function (data) {
-        var pts = JSON.parse(data.value)
-        pts.forEach(function (pt) {
-          if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
-              pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
-            stream.push(pt)
-          }
-        })
+        // TODO: test this code path
+        onData(data)
       })
       rs.on('end', function () {
         if (!--pending) stream.push(null)
@@ -82,13 +90,7 @@ GridPointStore.prototype.queryStream = function (bbox) {
       this.db.get(leftKey, function (err, value) {
         if (err && err.notFound) return
         if (err) return stream.emit('error', err)
-        var pts = JSON.parse(value)
-        pts.forEach(function (pt) {
-          if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
-              pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
-            stream.push(pt)
-          }
-        })
+        onData(Buffer(value))
         if (!--pending) stream.push(null)
       })
     }
@@ -96,7 +98,35 @@ GridPointStore.prototype.queryStream = function (bbox) {
     y++
   }
 
+  function onData (buf) {
+    var pts = self.deserializePoints(buf)
+    for (var i=0; i < pts.length; i++) {
+      var pt = pts[i]
+      if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
+          pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
+        stream.push(pt)
+      }
+    }
+  }
+
   return stream
+}
+
+// Buffer -> [Point]
+GridPointStore.prototype.deserializePoints = function (buf) {
+  var pos = 0
+  var res = []
+  while (pos < buf.length) {
+    var lat = this.pointType.read(buf, pos); pos += this.pointType.size
+    var lon = this.pointType.read(buf, pos); pos += this.pointType.size
+    var val = this.valueType.read(buf, pos); pos += this.valueType.size
+    res.push({
+      lat: lat,
+      lon: lon,
+      value: val
+    })
+  }
+  return res
 }
 
 GridPointStore.prototype.pointToTileString = function (pt) {
