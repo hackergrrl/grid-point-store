@@ -32,9 +32,7 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
     self.pointType.write(itemBuf, pt[1], pos); pos += self.pointType.size
     self.valueType.write(itemBuf, value, pos)
 
-    if (buf) {
-      buf = Buffer.concat([buf, itemBuf])
-    }
+    if (buf) buf = Buffer.concat([buf, itemBuf])
     else buf = itemBuf
 
     self.db.put(idx, buf, {valueEncoding: 'binary'}, cb)
