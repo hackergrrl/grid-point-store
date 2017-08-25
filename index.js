@@ -192,11 +192,13 @@ function tileToTileString (n) {
 }
 
 function lonToRawMercator (lon, mapSize) {
+  lon = Math.max(-180, Math.min(180, lon))
   return ((lon + 180) / 360) * mapSize
 }
 
 // Lifted from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 function latToRawMercator (lat, mapSize) {
+  lat = Math.max(-85.0511, Math.min(85.0511, lat))
   return (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * mapSize
 }
 
