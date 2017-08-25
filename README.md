@@ -96,10 +96,16 @@ in the region.
 
 Query a rectangular region for points. Returns the Readable stream `stream`.
 
+### store.remove([lat, lon], cb)
+
+Deletes points at `[latitude, longitude]`.
+
+`cb` is a callback that will be called as `cb(err)` if an error occurs, or
+`cb(null)` if the deletion succeeded.
+
 ## Caveats
 
 - Missing: stream backpressure on `queryStream`
-- Missing: `store.remove()` for removing points
 
 PRs very welcome! :heart:
 

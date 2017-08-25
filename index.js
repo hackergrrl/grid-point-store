@@ -39,6 +39,41 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
   })
 }
 
+GridPointStore.prototype.remove = function (pt, opts, cb) {
+  if (!cb && typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
+
+  var self = this
+
+  var at = this.pointToTileString(pt).split(',')
+  var idx = at[0] + ',' + at[1]
+
+  this.db.get(idx, {valueEncoding: 'binary'}, function (err, buf) {
+    if (err && !err.notFound) return cb(err)
+
+    // nothing to do
+    if (err && err.notFound) return cb()
+
+    // get the position of the point to remove in the buffer
+    var pos = 0
+    var itemSize = self.pointType.size * 2 + self.valueType.size
+    while (pos < buf.length) {
+      var lat = self.pointType.read(buf, pos); pos += self.pointType.size
+      var lon = self.pointType.read(buf, pos); pos += self.pointType.size
+      var val = self.valueType.read(buf, pos); pos += self.valueType.size
+      if (lat == pt[0] && lon == pt[1]) {
+        buf = Buffer.concat([buf.slice(0, pos - itemSize), buf.slice(pos)])
+        pos -= itemSize
+      }
+    }
+
+    // rewrite the buffer, sans the point
+    self.db.put(idx, buf, {valueEncoding: 'binary'}, function (err) { cb(err) })
+  })
+}
+
 GridPointStore.prototype.query = function (q, opts, cb) {
   if (!cb && typeof opts === 'function') {
     cb = opts
@@ -92,9 +127,8 @@ GridPointStore.prototype.queryStream = function (bbox) {
       })
     } else {
       this.db.get(leftKey, {valueEncoding: 'binary'}, function (err, value) {
-        if (err && err.notFound) return
-        if (err) return stream.emit('error', err)
-        onData(Buffer(value))
+        if (err && !err.notFound) return stream.emit('error', err)
+        if (!err) onData(Buffer(value))
         if (!--pending) stream.push(null)
       })
     }
