@@ -2,6 +2,25 @@ var GeoStore = require('..')
 var test = require('tape')
 var memdb = require('memdb')
 
+test('bad bbox', function (t) {
+  t.plan(4)
+
+  var store = GeoStore(memdb(), { zoomLevel: 8, valueType: 'buffer[32]' })
+
+  var bbox = [ [ 63, 100 ], [ 0, -146 ] ]
+
+  store.query(bbox, function (err) {
+    t.ok(err)
+    t.equal(err.constructor.name, 'Error')
+
+    var q = store.queryStream(bbox)
+    q.on('error', function (err) {
+      t.ok(err)
+      t.equal(err.constructor.name, 'Error')
+    })
+  })
+})
+
 test('points', function (t) {
   var store = GeoStore(memdb({valueEncoding: 'binary'}), { zoomLevel: 8, valueType: 'buffer[32]' })
 

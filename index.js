@@ -49,11 +49,21 @@ GridPointStore.prototype.query = function (q, opts, cb) {
   var rs = this.queryStream(q)
   rs.on('data', function (data) { res.push(data) })
   rs.on('end', function () { cb(null, res) })
+  rs.on('error', cb)
 }
 
 GridPointStore.prototype.queryStream = function (bbox) {
   var stream = new Readable({ objectMode: true })
   stream._read = function () {}
+
+  // abort if the bbox is malformed
+  if (bbox[0][0] > bbox[1][0] || bbox[0][1] > bbox[1][1]) {
+    process.nextTick(function () {
+      var err = new Error('bbox is malformed! must be [ [ top, left ], [ bottom, right ] ]')
+      stream.emit('error', err)
+    })
+    return stream
+  }
 
   bbox[0][0] += 0.00000001
   bbox[1][1] -= 0.00000001
