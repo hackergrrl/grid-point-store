@@ -3,7 +3,7 @@ var Types = require('comparable-storable-types')
 
 module.exports = GridPointStore
 
-var ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+var ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('')
 
 // TODO: store point data as a buffer that is appended to
 function GridPointStore (leveldb, opts) {
