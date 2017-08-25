@@ -78,9 +78,10 @@ Insert a point `[latitude, longitude]` with value `value` into the store.
 `cb` is a callback that will be called as `cb(err)` if an error occurs, or
 `cb(null)` if the insertion succeeded.
 
-### var stream = store.queryStream(bbox)
+### store.query(bbox[, opts], cb)
 
-Query a rectangular region for points. Returns the Readable stream `stream`.
+Query a rectangular region for points. `cb` is called with the array of points
+in the region.
 
 `bbox` is an array of arrays of the form
 
@@ -90,6 +91,10 @@ Query a rectangular region for points. Returns the Readable stream `stream`.
   [ bottomRightLatitude, bottomRightLongitude ]
 ]
 ```
+
+### var stream = store.queryStream(bbox)
+
+Query a rectangular region for points. Returns the Readable stream `stream`.
 
 ## Caveats
 

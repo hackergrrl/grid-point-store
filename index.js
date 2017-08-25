@@ -39,6 +39,18 @@ GridPointStore.prototype.insert = function (pt, value, cb) {
   })
 }
 
+GridPointStore.prototype.query = function (q, opts, cb) {
+  if (!cb && typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
+
+  var res = []
+  var rs = this.queryStream(q)
+  rs.on('data', function (data) { res.push(data) })
+  rs.on('end', function () { cb(null, res) })
+}
+
 GridPointStore.prototype.queryStream = function (bbox) {
   var stream = new Readable({ objectMode: true })
   stream._read = function () {}

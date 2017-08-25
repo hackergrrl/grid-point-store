@@ -19,12 +19,12 @@ test('points', function (t) {
       t.error(err)
       store.insert([ 64.2, -146.5 ], new Buffer(keys[2], 'hex'), function (err) {
         t.error(err)
-        check()
+        checkStream()
       })
     })
   })
 
-  function check () {
+  function checkStream () {
     var q = store.queryStream(bbox)
     var actual = []
     q.on('data', function (pt) {
@@ -32,6 +32,15 @@ test('points', function (t) {
     })
     q.on('end', function () {
       t.deepEqual(actual.sort(), keys.sort())
+      checkCb()
+    })
+  }
+
+  function checkCb () {
+    store.query(bbox, function (err, pts) {
+      t.error(err)
+      pts = pts.map(function (pt) { return pt.value.toString('hex') })
+      t.deepEqual(pts.sort(), keys.sort())
       t.end()
     })
   }
