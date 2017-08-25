@@ -65,13 +65,11 @@ GridPointStore.prototype.queryStream = function (bbox) {
     return stream
   }
 
-  bbox[0][0] += 0.00000001
-  bbox[1][1] -= 0.00000001
-
   var self = this
+  var EPSILON = 0.00000001
 
   var y = latToMercator(bbox[1][0], this.mapSize)
-  var endY = latToMercator(bbox[0][0], this.mapSize)
+  var endY = latToMercator(bbox[0][0] + EPSILON, this.mapSize)
 
   var pending = 0
   // TODO: should bbox queries inclusive on the bottom+right edges?

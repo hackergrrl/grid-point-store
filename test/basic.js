@@ -22,7 +22,7 @@ test('bad bbox', function (t) {
 })
 
 test('points', function (t) {
-  var store = GeoStore(memdb({valueEncoding: 'binary'}), { zoomLevel: 8, valueType: 'buffer[32]' })
+  var store = GeoStore(memdb(), { zoomLevel: 8, valueType: 'buffer[32]' })
 
   var bbox = [ [ 63, -148 ], [ 65, -146 ] ]
 
@@ -60,6 +60,41 @@ test('points', function (t) {
       t.error(err)
       pts = pts.map(function (pt) { return pt.value.toString('hex') })
       t.deepEqual(pts.sort(), keys.sort())
+      t.end()
+    })
+  }
+})
+
+test('bbox /w zero area', function (t) {
+  var store = GeoStore(memdb(), { zoomLevel: 5, valueType: 'buffer[6]' })
+
+  var bbox = [ [ 1, 1 ], [ 1, 1 ] ]
+
+  store.insert([1, 1], new Buffer('hello!'), function (err) {
+    t.error(err)
+    store.insert([0, 0], new Buffer('friend'), function (err) {
+      t.error(err)
+      checkStream()
+    })
+  })
+
+  function checkStream () {
+    var q = store.queryStream(bbox)
+    var actual = []
+    q.on('data', function (pt) {
+      actual.push(pt.value.toString())
+    })
+    q.on('end', function () {
+      t.deepEqual(actual, ['hello!'])
+      checkCb()
+    })
+  }
+
+  function checkCb () {
+    store.query(bbox, function (err, pts) {
+      t.error(err)
+      pts = pts.map(function (pt) { return pt.value.toString() })
+      t.deepEqual(pts, ['hello!'])
       t.end()
     })
   }
