@@ -6,15 +6,19 @@ module.exports = GridPointStore
 var ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('')
 
 // TODO: store point data as a buffer that is appended to
-function GridPointStore (leveldb, opts) {
-  if (!(this instanceof GridPointStore)) return new GridPointStore(leveldb, opts)
+function GridPointStore (opts) {
+  if (!(this instanceof GridPointStore)) return new GridPointStore(opts)
   opts = opts || {}
+  if (opts.types && (!Array.isArray(opts.types) || opts.types.length !== 3)) {
+    throw new Error('"opts.types" must be a size-3 array')
+  }
+  opts.types = opts.types || ['float64', 'float64', 'uint32']
 
-  this.db = leveldb
+  this.db = opts.store
   this.zoomLevel = opts.zoomLevel || 16
   this.mapSize = Math.pow(2, this.zoomLevel)
-  this.pointType = Types(opts.pointType || 'float64')
-  this.valueType = Types(opts.valueType || 'uint32')
+  this.pointType = Types(opts.types[0] || 'float64')
+  this.valueType = Types(opts.types[2] || 'uint32')
 }
 
 GridPointStore.prototype.insert = function (pt, value, cb) {
@@ -92,16 +96,30 @@ GridPointStore.prototype.queryStream = function (bbox) {
   stream._read = function () {}
 
   // abort if the bbox is malformed
-  if (bbox[0][0] > bbox[1][0] || bbox[0][1] > bbox[1][1]) {
+  if (bbox[0][0] > bbox[0][1] || bbox[1][0] > bbox[1][1]) {
     process.nextTick(function () {
-      var err = new Error('bbox is malformed! must be [ [ top, left ], [ bottom, right ] ]')
+      var err = new Error('bbox is malformed! must be [ [ minX, maxX ], [ minY, maxY ] ]')
       stream.emit('error', err)
     })
     return stream
   }
 
   var self = this
+  // XXX(noffle): this should really depend on the pointType!
   var EPSILON = 0.00000001
+
+  if (bbox[0][0] === bbox[0][1]) {
+    bbox[0][0] -= EPSILON
+    bbox[0][1] += EPSILON
+  }
+  if (bbox[1][0] === bbox[1][1]) {
+    bbox[1][0] -= EPSILON
+    bbox[1][1] += EPSILON
+  }
+
+  // TODO(noffle): update the code below to use the [[minx,maxx],[miny,maxy]]
+  // format bbox to avoid this conversion
+  bbox = [[bbox[0][0], bbox[1][0]], [bbox[0][1], bbox[1][1]]]  // top, left, bottom, right
 
   var y = latToMercator(bbox[1][0], this.mapSize)
   var endY = latToMercator(bbox[0][0] + EPSILON, this.mapSize)
@@ -140,8 +158,8 @@ GridPointStore.prototype.queryStream = function (bbox) {
     var pts = self.deserializePoints(buf)
     for (var i = 0; i < pts.length; i++) {
       var pt = pts[i]
-      if (pt.lat >= bbox[0][0] && pt.lat <= bbox[1][0] &&
-          pt.lon >= bbox[0][1] && pt.lon <= bbox[1][1]) {
+      if (pt.point[0] >= bbox[0][0] && pt.point[0] <= bbox[1][0] &&
+          pt.point[1] >= bbox[0][1] && pt.point[1] <= bbox[1][1]) {
         stream.push(pt)
       }
     }
@@ -159,8 +177,7 @@ GridPointStore.prototype.deserializePoints = function (buf) {
     var lon = this.pointType.read(buf, pos); pos += this.pointType.size
     var val = this.valueType.read(buf, pos); pos += this.valueType.size
     res.push({
-      lat: lat,
-      lon: lon,
+      point: [lat, lon],
       value: val
     })
   }

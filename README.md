@@ -8,7 +8,10 @@
 var GeoStore = require('grid-point-store')
 var memdb = require('memdb')
 
-var store = GeoStore(memdb(), { zoomLevel: 14 })
+var store = GeoStore({
+  store: memdb(),
+  zoomLevel: 14
+})
 
 var pending = 10
 var spread = 0.1  // ~10km
@@ -25,7 +28,7 @@ function insert () {
 insert()
 
 function check () {
-  var bbox = [ [ -1, -1 ], [ 1,  1 ] ]
+  var bbox = [ [ -1, 1 ], [ -1,  1 ] ]
   var q = store.queryStream(bbox)
   q.on('data', function (pt) {
     console.log('data', pt)
@@ -36,16 +39,16 @@ function check () {
 outputs
 
 ```
-data { lat: 0.021974959554208737, lon: -0.036042143780795316, value: 486 }
-data { lat: 0.01731653112725491, lon: 0.04090562190958498, value: 398 }
-data { lat: -0.0059460250360946695, lon: -0.027539338463307098, value: 3 }
-data { lat: -0.037361984139033334, lon: -0.002493949477883839, value: 3795 }
-data { lat: -0.043988977366412524, lon: -0.03764949331648002, value: 4426 }
-data { lat: -0.045367303981649724, lon: -0.03634679567215611, value: 356 }
-data { lat: 0.023642309425643854, lon: 0.017864021495420324, value: 81 }
-data { lat: -0.031037061354238983, lon: 0.006035785956166738, value: 407 }
-data { lat: 0.03480660267412845, lon: 0.032896501435967895, value: 46 }
-data { lat: 0.02960226742605787, lon: 0.027872606373290573, value: 788 }
+data { point: 0.021974959554208737, -0.036042143780795316 }, value: 486 }
+data { point: 0.01731653112725491, 0.04090562190958498 }, value: 398 }
+data { point: -0.0059460250360946695, -0.027539338463307098 }, value: 3 }
+data { point: -0.037361984139033334, -0.002493949477883839 }, value: 3795 }
+data { point: -0.043988977366412524, -0.03764949331648002 }, value: 4426 }
+data { point: -0.045367303981649724, -0.03634679567215611 }, value: 356 }
+data { point: 0.023642309425643854, 0.017864021495420324 }, value: 81 }
+data { point: -0.031037061354238983, 0.006035785956166738 }, value: 407 }
+data { point: 0.03480660267412845, 0.032896501435967895 }, value: 46 }
+data { point: 0.02960226742605787, 0.027872606373290573 }, value: 788 }
 ```
 
 ## API
@@ -54,26 +57,24 @@ data { lat: 0.02960226742605787, lon: 0.027872606373290573, value: 788 }
 var GeoStore = require('grid-point-store')
 ```
 
-### var store = GeoStore(leveldb[, opts])
+### var store = GeoStore(opts)
 
 Create a new point store `store` backed by the LevelUP instance `leveldb`.
 
 Valid `opts` include:
 
-- `zoomLevel` (integer): an OSM-style zoom level to divide the world up by.
-  `zoomLevel == 1` captures the entire world in 1 tile, `2` in 4 tiles, `3` in
-  16 tiles, and so forth. Read more on [OSM zoom
+- (required) `store`: an [LevelUP](https://github.com/Level/LevelUP) compatible
+  database instance.
+- (optional) `zoomLevel` (integer): an OSM-style zoom level to divide the world
+  up by. `zoomLevel == 1` captures the entire world in 1 tile, `2` in 4 tiles,
+  `3` in 16 tiles, and so forth. Read more on [OSM zoom
   levels](wiki.openstreetmap.org/wiki/Zoom_levels).
-- `pointType` (string): a [comparable storable
-  type](https://github.com/substack/comparable-storable-types) string for the
-  latitude and longitude components. Defaults to `float64`.
-- `valueType` (string): a [comparable storable
-  type](https://github.com/substack/comparable-storable-types) string for
-  point values. Defaults to `uint32`.
+- (optional) `types` (Array[3]): a size-3 array of [comparable storable type](https://github.com/substack/comparable-storable-types) strings for the
+  X and Y components, with the 3rd being the value format. Defaults to `['float64', 'float64', 'uint32']`.
 
-### store.insert([lat, lon], value, cb)
+### store.insert([x, y], value, cb)
 
-Insert a point `[latitude, longitude]` with value `value` into the store.
+Insert a point `[x, y]` with value `value` into the store.
 
 `cb` is a callback that will be called as `cb(err)` if an error occurs, or
 `cb(null)` if the insertion succeeded.
@@ -87,8 +88,8 @@ in the region.
 
 ```
 [
-  [ topLeftLatitude,     topLeftLongitude ],
-  [ bottomRightLatitude, bottomRightLongitude ]
+  [ minX, maxX ],
+  [ minY, maxY ]
 ]
 ```
 
@@ -96,9 +97,9 @@ in the region.
 
 Query a rectangular region for points. Returns the Readable stream `stream`.
 
-### store.remove([lat, lon], cb)
+### store.remove([x, y], cb)
 
-Deletes points at `[latitude, longitude]`.
+Deletes points at `[x, y]`.
 
 `cb` is a callback that will be called as `cb(err)` if an error occurs, or
 `cb(null)` if the deletion succeeded.

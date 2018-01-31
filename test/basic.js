@@ -5,7 +5,7 @@ var memdb = require('memdb')
 test('bad bbox', function (t) {
   t.plan(4)
 
-  var store = GeoStore(memdb(), { zoomLevel: 8, valueType: 'buffer[32]' })
+  var store = GeoStore({ store: memdb(), zoomLevel: 8, types: ['float64', 'float64', 'buffer[32]'] })
 
   var bbox = [ [ 63, 100 ], [ 0, -146 ] ]
 
@@ -22,9 +22,9 @@ test('bad bbox', function (t) {
 })
 
 test('points', function (t) {
-  var store = GeoStore(memdb(), { zoomLevel: 8, valueType: 'buffer[32]' })
+  var store = GeoStore({ store: memdb(), zoomLevel: 8, types: ['float64', 'float64', 'buffer[32]'] })
 
-  var bbox = [ [ 63, -148 ], [ 65, -146 ] ]
+  var bbox = [ [ 63, 65 ], [ -148, -146 ] ]
 
   var keys = [
     '04cbe14f95fbc8eb89f7f0fe25886f9c70806ae20b03c24d2fe19a19a45df1e3',
@@ -47,6 +47,7 @@ test('points', function (t) {
     var q = store.queryStream(bbox)
     var actual = []
     q.on('data', function (pt) {
+      console.log(pt)
       actual.push(pt.value.toString('hex'))
     })
     q.on('end', function () {
@@ -66,7 +67,7 @@ test('points', function (t) {
 })
 
 test('bbox /w zero area', function (t) {
-  var store = GeoStore(memdb(), { zoomLevel: 5, valueType: 'buffer[6]' })
+  var store = GeoStore({ store: memdb(), zoomLevel: 5, types: ['float64', 'float64', 'buffer[6]'] })
 
   var bbox = [ [ 1, 1 ], [ 1, 1 ] ]
 

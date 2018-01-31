@@ -3,9 +3,9 @@ var test = require('tape')
 var memdb = require('memdb')
 
 test('random points', function (t) {
-  var store = GeoStore(memdb({valueEncoding: 'binary'}), { zoomLevel: 8 })
+  var store = GeoStore({ store: memdb({valueEncoding: 'binary'}), zoomLevel: 8 })
 
-  var bbox = [ [ -5, -5 ], [ 5, 5 ] ]
+  var bbox = [ [ -5, 5 ], [ -5, 5 ] ]
   var expected = {}
 
   var pending = 2000
@@ -20,8 +20,8 @@ test('random points', function (t) {
 
       pending--
 
-      if (y >= bbox[0][0] && y <= bbox[1][0] &&
-          x >= bbox[0][1] && x <= bbox[1][1]) {
+      if (y >= bbox[1][0] && y <= bbox[1][1] &&
+          x >= bbox[0][0] && x <= bbox[0][1]) {
         expected[loc] = true
       }
 
