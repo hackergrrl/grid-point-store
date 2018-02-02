@@ -2,7 +2,7 @@
   "name": "grid-point-store",
   "description": "Fast 2D point insertions and spatial querying over a fixed grid.",
   "author": "Stephen Whitmore <sww@eight.net>",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "repository": {
     "url": "git://github.com/noffle/grid-point-store.git"
   },
