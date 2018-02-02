@@ -97,9 +97,14 @@ in the region.
 
 Query a rectangular region for points. Returns the Readable stream `stream`.
 
-### store.remove([x, y], cb)
+### store.remove(pt[, opts], cb)
 
-Deletes points at `[x, y]`.
+Deletes points at `pt` (a size-2 array of the form `[x, y]`).
+
+Valid `opts` include
+
+- (optional) `opts.value`: Only delete points at this location with this
+  specific value.
 
 `cb` is a callback that will be called as `cb(err)` if an error occurs, or
 `cb(null)` if the deletion succeeded.
