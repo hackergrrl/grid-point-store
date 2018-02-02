@@ -67,6 +67,9 @@ GridPointStore.prototype.remove = function (pt, opts, cb) {
       var lat = self.pointType.read(buf, pos); pos += self.pointType.size
       var lon = self.pointType.read(buf, pos); pos += self.pointType.size
       var val = self.valueType.read(buf, pos); pos += self.valueType.size
+
+      if (opts.value && val !== opts.value) continue
+
       if (lat == pt[0] && lon == pt[1]) {
         buf = Buffer.concat([buf.slice(0, pos - itemSize), buf.slice(pos)])
         pos -= itemSize
